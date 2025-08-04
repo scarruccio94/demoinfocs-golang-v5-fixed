@@ -1069,7 +1069,9 @@ func getPlayerWeapon(player *common.Player, wepType common.EquipmentType) *commo
 func mapGameEventData(d *msg.CMsgSource1LegacyGameEventListDescriptorT, e *msg.CMsgSource1LegacyGameEvent) map[string]*msg.CMsgSource1LegacyGameEventKeyT {
 	data := make(map[string]*msg.CMsgSource1LegacyGameEventKeyT, len(d.Keys))
 	for i, k := range d.Keys {
-		data[k.GetName()] = e.Keys[i]
+		if i < len(e.Keys) {
+			data[k.GetName()] = e.Keys[i]
+		}
 	}
 
 	return data
