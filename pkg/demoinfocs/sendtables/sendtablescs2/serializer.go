@@ -33,11 +33,19 @@ func (s *serializer) id() string {
 }
 
 func (s *serializer) getNameForFieldPath(fp *fieldPath, pos int) []string {
-	return s.fields[fp.path[pos]].getNameForFieldPath(fp, pos+1)
+	index := fp.path[pos]
+	if index < 0 || len(s.fields) <= index {
+		return nil
+	}
+	return s.fields[index].getNameForFieldPath(fp, pos+1)
 }
 
 func (s *serializer) getTypeForFieldPath(fp *fieldPath, pos int) *fieldType {
-	return s.fields[fp.path[pos]].getTypeForFieldPath(fp, pos+1)
+	index := fp.path[pos]
+	if index < 0 || len(s.fields) <= index {
+		return nil
+	}
+	return s.fields[index].getTypeForFieldPath(fp, pos+1)
 }
 
 func (s *serializer) getDecoderForFieldPath(fp *fieldPath, pos int) fieldDecoder {
@@ -61,7 +69,11 @@ func (s *serializer) getDecoderForFieldPath2(fp *fieldPath, pos int) (fieldDecod
 }
 
 func (s *serializer) getFieldForFieldPath(fp *fieldPath, pos int) *field {
-	return s.fields[fp.path[pos]].getFieldForFieldPath(fp, pos+1)
+	index := fp.path[pos]
+	if index < 0 || len(s.fields) <= index {
+		return nil
+	}
+	return s.fields[index].getFieldForFieldPath(fp, pos+1)
 }
 
 func (s *serializer) getFieldPathForName(fp *fieldPath, name string) bool {

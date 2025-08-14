@@ -413,6 +413,9 @@ func (e *Entity) readFields(r *reader, paths *[]*fieldPath) {
 
 	for _, fp := range (*paths)[:n] {
 		f := e.class.serializer.getFieldForFieldPath(fp, 0)
+		if f == nil {
+			continue
+		}
 		name := e.class.getNameForFieldPath(fp)
 		decoder, base := e.class.serializer.getDecoderForFieldPath2(fp, 0)
 
@@ -509,7 +512,8 @@ func (p *Parser) OnPacketEntities(m *msg.CSVCMsg_PacketEntities) error {
 
 				class := p.classesById[classID]
 				if class == nil {
-					_panicf("unable to find new class %d", classID)
+					// Skip entity with unknown class - might be from corrupted demo data
+					continue
 				}
 
 				e = newEntity(index, serial, class)
@@ -542,7 +546,12 @@ func (p *Parser) OnPacketEntities(m *msg.CSVCMsg_PacketEntities) error {
 
 				e = p.entities[index]
 				if e == nil {
-					_panicf("unable to find existing entity %d", index)
+					// Create temporary entity to read and discard data for missing entity
+					// This prevents parser corruption from invalid entity references
+					tempClass := &class{serializer: &serializer{fields: []*field{}}}
+					tempEntity := &Entity{class: tempClass}
+					tempEntity.readFields(r, &p.pathCache)
+					continue
 				}
 
 				op = st.EntityOpUpdated
@@ -556,7 +565,8 @@ func (p *Parser) OnPacketEntities(m *msg.CSVCMsg_PacketEntities) error {
 		} else {
 			e = p.entities[index]
 			if e == nil {
-				_panicf("unable to find existing entity %d", index)
+				// Skip missing entity - might be from corrupted demo data
+				continue
 			}
 
 			if !e.active {
