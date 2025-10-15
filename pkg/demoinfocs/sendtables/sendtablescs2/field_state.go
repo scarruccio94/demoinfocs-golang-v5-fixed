@@ -35,8 +35,16 @@ func (s *fieldState) set(fp *fieldPath, v any) {
 	x := s
 	z := 0
 
+	// Maximum size limit to prevent memory leaks from corrupted demo data
+	const maxFieldStateSize = 5120
+
 	for i := 0; i <= fp.last; i++ {
 		z = fp.path[i]
+
+		// Block excessively large indices that indicate corrupted data
+		if z >= maxFieldStateSize {
+			return
+		}
 
 		if y := len(x.state); y <= z {
 			newCap := max(z+2, y*2)
